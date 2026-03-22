@@ -179,3 +179,6 @@ poetry.toml
 pyrightconfig.json
 
 .vscode
+
+
+gliner/decoding/trie/labels_trie.cpp
