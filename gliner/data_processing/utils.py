@@ -147,7 +147,8 @@ def prepare_word_mask(
         raise ValueError("skip_first_words must have same length as texts")
 
     words_masks: List[List[int]] = []
-
+    # print(texts)
+    # print(tokenized_inputs)
     for i in range(n):
         mask: List[int] = []
         prev_word_id: Optional[int] = None

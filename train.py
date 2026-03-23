@@ -50,6 +50,16 @@ def main(cfg_path: str):
     model = build_model(model_cfg, train_cfg).to(dtype=torch.float32)
     print(f"Model type: {model.__class__.__name__}")
     
+    # ======= PHẦN MỚI CHÈN VÀO ĐỂ LOAD CÁC LOẠI ENTITY TRƯỚC KHI TRAIN ========
+    # Bạn có thể trỏ cố định đến file danh sách entity mong muốn của bạn!
+    labels_path = "valid_data/labels.json" # Ví dụ file labels.json
+    try:
+        model.eval_entity_types = load_json_data(labels_path)
+        print(f"Loaded {len(model.eval_entity_types)} entity types for customized evaluation.")
+    except Exception as e:
+        print(f"No custom labels provided or unable to read {labels_path}. Fallback to automatic class extraction.")
+    # =========================================================================
+    
     # Get freeze components
     freeze_components = train_cfg.get("freeze_components", None)
     if freeze_components:
@@ -62,7 +72,7 @@ def main(cfg_path: str):
         eval_dataset=eval_dataset,
         output_dir="models",
         # Schedule
-        max_steps=cfg.training.num_steps,
+        # max_steps=-1,
         lr_scheduler_type=cfg.training.scheduler_type,
         warmup_ratio=cfg.training.warmup_ratio,
         # Batch & optimization
@@ -81,9 +91,19 @@ def main(cfg_path: str):
         negatives=float(cfg.training.negatives),
         masking=cfg.training.masking,
         # Logging & saving
-        save_steps=cfg.training.eval_every,
-        logging_steps=cfg.training.eval_every,
-        save_total_limit=cfg.training.save_total_limit,
+        save_strategy=getattr(cfg.training, "save_strategy", "epoch"),
+        save_total_limit=getattr(cfg.training, "save_total_limit", 2),
+        logging_strategy="steps",
+        logging_steps=100,
+        eval_strategy=getattr(cfg.training, "eval_strategy", "epoch"),
+        
+        # Bật lại tính năng lưu model xịn nhất đồng bộ trực tiếp từ file YAML Config
+        load_best_model_at_end=getattr(cfg.training, "load_best_model_at_end", True),
+        metric_for_best_model=getattr(cfg.training, "metric_for_best_model", "eval_f1"),
+        greater_is_better=getattr(cfg.training, "greater_is_better", True),
+
+        num_train_epochs=cfg.training.num_train_epochs,
+        report_to=cfg.training.report_to,
         # Freezing
         freeze_components=freeze_components,
 

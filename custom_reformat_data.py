@@ -56,7 +56,7 @@ def convert_to_span(tokens, tags, list_ent = None):
         ner_negatives = set(list_ent) - ner_labels
 
         return{
-            "tokens": tokens,
+            "tokenized_text": tokens,
             "ner": ner,
             "ner_labels": list(ner_labels),
             "ner_negatives": list(ner_negatives)
@@ -64,7 +64,7 @@ def convert_to_span(tokens, tags, list_ent = None):
         
 
     return {
-        "tokens": tokens,
+        "tokenized_text": tokens,
         "ner": ner
     }
 

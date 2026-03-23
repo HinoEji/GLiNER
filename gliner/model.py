@@ -1013,7 +1013,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         per_device_train_batch_size: int = 8,
         per_device_eval_batch_size: int = 8,
         max_grad_norm: float = 1.0,
-        max_steps: int = 10000,
+        max_steps: int = -1,
         save_steps: int = 1000,
         save_total_limit: int = 10,
         logging_steps: int = 10,
@@ -1568,10 +1568,11 @@ class BaseEncoderGLiNER(BaseGLiNER):
     def evaluate(
         self,
         test_data: List[Dict[str, Any]],
-        flat_ner: bool = False,
+        flat_ner: bool = True,
         multi_label: bool = False,
         threshold: float = 0.5,
         batch_size: int = 12,
+        entity_types: Optional[List[str]] = None,
     ) -> Tuple[Any, float]:
         """Evaluate the model on a given test dataset.
 
@@ -1596,7 +1597,11 @@ class BaseEncoderGLiNER(BaseGLiNER):
             return_id_to_classes=True,
             prepare_labels=False,
         )
-        data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collator)
+
+        def collate_fn(batch):
+            return collator(batch, entity_types=entity_types) if entity_types else collator(batch)
+
+        data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
 
         all_preds = self._process_batches(data_loader, threshold, flat_ner, multi_label)
         all_trues = []
@@ -1608,6 +1613,42 @@ class BaseEncoderGLiNER(BaseGLiNER):
         # Evaluate the predictions
         evaluator = BaseNEREvaluator(all_trues, all_preds)
         out, f1 = evaluator.evaluate()
+
+        # In dự đoán của một vài sample ngẫu nhiên để người dùng theo dõi (chỉ in ở ngưỡng phổ biến để tránh lặp)
+        if len(dataset) > 0 and threshold == 0.5:
+            import random
+            print(f"\n--- Previewing random predictions from evaluation dataset (Threshold: {threshold}) ---")
+            num_samples = min(3, len(dataset))
+            random_indices = random.sample(range(len(dataset)), num_samples)
+
+            for i in random_indices:
+                text = dataset[i].get("tokenized_text", [])
+                text_str = " ".join(text) if isinstance(text, list) else str(text)
+                
+                # Ground truth
+                trues_list = []
+                # Mảng all_trues chứa list of lists
+                if i < len(all_trues):
+                    for t in all_trues[i]:
+                        s, e, lbl = t[0], t[1], t[2]
+                        w = text[s:e+1] if isinstance(text, list) else []
+                        w_str = ' '.join(w) if w else "..."
+                        trues_list.append(f"{lbl} [{w_str}]")
+                
+                # Predictions
+                preds_list = []
+                if i < len(all_preds):
+                    for p in all_preds[i]:
+                        s, e = getattr(p, "start", p[0]), getattr(p, "end", p[1])
+                        lbl = getattr(p, "entity_type", p[2] if len(p)>2 else "UNK")
+                        w = text[s:e+1] if isinstance(text, list) else []
+                        w_str = ' '.join(w) if w else "..."
+                        preds_list.append(f"{lbl} [{w_str}]")
+                
+                print(f"\n[Text {i+1}]: {text_str}")
+                print(f"  --> True: {', '.join(trues_list)}")
+                print(f"  --> Pred: {', '.join(preds_list)}")
+            print("-" * 60 + "\n")
 
         return out, f1
 

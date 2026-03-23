@@ -95,6 +95,82 @@ class Trainer(transformers.Trainer):
     - skips only OOM by default (other exceptions are raised so you don't silently get 0 loss)
     """
 
+    def evaluate(
+        self,
+        eval_dataset: Optional[Union[Dataset, Dict[str, Dataset]]] = None,
+        ignore_keys: Optional[List[str]] = None,
+        metric_key_prefix: str = "eval",
+    ) -> Dict[str, float]:
+        metrics = super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
+        
+        dataset_to_eval = eval_dataset if eval_dataset is not None else self.eval_dataset
+        # Kiểm tra xem model có được truyền trực tiếp danh sách entity_types cần evaluate hay không 
+        entity_types = getattr(self.model, "eval_entity_types", None)
+        
+        if dataset_to_eval is not None:
+            import numpy as np
+            import sys
+            import re
+            
+            # Quét thử từ ngưỡng 0.3 đến 0.8 (bước nhảy 0.1)
+            thresholds = [round(t, 1) for t in np.arange(0.3, 0.9, 0.1)]
+            
+            if isinstance(dataset_to_eval, dict):
+                for key, dataset in dataset_to_eval.items():
+                    print(f"\n[Evaluating {key}] Sweeping thresholds {thresholds}...")
+                    best_f1, best_thresh, best_results = -1.0, 0.5, ""
+                    for t in thresholds:
+                        sys.stdout.write(f"  Testing TH {t} ")
+                        sys.stdout.flush()
+                        results, f1 = self.model.evaluate(dataset, entity_types=entity_types, threshold=t)
+                        sys.stdout.write(f"-> F1: {f1:.4f}\n")
+                        
+                        if f1 > best_f1:
+                            best_f1, best_thresh, best_results = f1, t, results
+                            
+                    metrics[f"{metric_key_prefix}_{key}_f1"] = best_f1
+                    p_match = re.search(r'P:\s*([\d.]+)%', best_results)
+                    r_match = re.search(r'R:\s*([\d.]+)%', best_results)
+                    metrics[f"{metric_key_prefix}_{key}_precision"] = float(p_match.group(1))/100.0 if p_match else 0.0
+                    metrics[f"{metric_key_prefix}_{key}_recall"] = float(r_match.group(1))/100.0 if r_match else 0.0
+                    
+                    print(f"\n  [WINNER] TH {best_thresh} gave Highest F1: {best_f1:.4f}\nDetailed:\n{best_results}\n")
+            else:
+                print(f"\n[Evaluating validation set] Sweeping thresholds {thresholds}...")
+                best_f1, best_thresh, best_results = -1.0, 0.5, ""
+                for t in thresholds:
+                    sys.stdout.write(f"  Testing TH {t} ")
+                    sys.stdout.flush()
+                    results, f1 = self.model.evaluate(dataset_to_eval, entity_types=entity_types, threshold=t)
+                    sys.stdout.write(f"-> F1: {f1:.4f}\n")
+                    
+                    if f1 > best_f1:
+                        best_f1, best_thresh, best_results = f1, t, results
+                        
+                metrics[f"{metric_key_prefix}_f1"] = best_f1
+                p_match = re.search(r'P:\s*([\d.]+)%', best_results)
+                r_match = re.search(r'R:\s*([\d.]+)%', best_results)
+                metrics[f"{metric_key_prefix}_precision"] = float(p_match.group(1))/100.0 if p_match else 0.0
+                metrics[f"{metric_key_prefix}_recall"] = float(r_match.group(1))/100.0 if r_match else 0.0
+                metrics[f"{metric_key_prefix}_best_threshold"] = best_thresh
+                
+                print(f"\n  [WINNER] TH {best_thresh} gave Highest F1: {best_f1:.4f}\nDetailed:\n{best_results}\n")
+                
+            # Cập nhật state nội bộ để TrainerHf tracking cái best F1 này
+            if self.state.log_history and f"{metric_key_prefix}_loss" in self.state.log_history[-1]:
+                if isinstance(dataset_to_eval, dict):
+                    for key in dataset_to_eval.keys():
+                        self.state.log_history[-1][f"{metric_key_prefix}_{key}_f1"] = metrics[f"{metric_key_prefix}_{key}_f1"]
+                        self.state.log_history[-1][f"{metric_key_prefix}_{key}_precision"] = metrics[f"{metric_key_prefix}_{key}_precision"]
+                        self.state.log_history[-1][f"{metric_key_prefix}_{key}_recall"] = metrics[f"{metric_key_prefix}_{key}_recall"]
+                else:
+                    self.state.log_history[-1][f"{metric_key_prefix}_f1"] = metrics[f"{metric_key_prefix}_f1"]
+                    self.state.log_history[-1][f"{metric_key_prefix}_precision"] = metrics[f"{metric_key_prefix}_precision"]
+                    self.state.log_history[-1][f"{metric_key_prefix}_recall"] = metrics[f"{metric_key_prefix}_recall"]
+                    self.state.log_history[-1][f"{metric_key_prefix}_best_threshold"] = metrics[f"{metric_key_prefix}_best_threshold"]
+
+        return metrics
+
     def _save(self, output_dir: str = None, state_dict=None):
         # called by HF during checkpoint saves
         if not self.args.should_save:
@@ -299,7 +375,7 @@ class Trainer(transformers.Trainer):
         self,
         model: nn.Module,
         inputs: Dict[str, Union[torch.Tensor, Any]],
-        prediction_loss_only: bool,
+        prediction_loss_only: bool = False,
         ignore_keys: Optional[List[str]] = None,
     ) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor], Optional[torch.Tensor]]:
         model.eval()

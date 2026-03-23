@@ -31,6 +31,15 @@ class BaseProcessor(ABC):
         """
         self.config = config
         self.transformer_tokenizer = tokenizer
+
+        # fast check if the tokenizer support word_ids
+        try:
+            dump = self.transformer_tokenizer("test")
+            dump.word_ids()
+            self.support_word_ids = True
+        except:
+            self.support_word_ids = False
+
         if words_splitter is None:
             self.words_splitter = WordsSplitter(splitter_type=config.words_splitter_type)
         else:
@@ -274,6 +283,74 @@ class BaseProcessor(ABC):
             token_level=token_level,
         )
 
+
+    def add_word_ids_to_tokenizer(self, tokenized_inputs, tokenizer, input_texts):
+        """
+        Tạo word_ids dựa trên việc đếm subwords của từng từ gốc.
+        Áp dụng được cho PhoBERT, BERT, RoBERTa... mà không cần quan tâm ký hiệu @@ hay ##.
+        """
+        all_word_ids = []
+        
+        # Lấy danh sách ID của các token đặc biệt (<s>, </s>, [CLS], [SEP], <pad>...)
+        special_ids = set(tokenizer.all_special_ids)
+
+        for i, words in enumerate(input_texts):
+            input_ids = tokenized_inputs["input_ids"][i].tolist()
+            
+            # 1. Tính toán xem mỗi từ gốc sinh ra bao nhiêu subwords
+            # add_special_tokens=False cực kỳ quan trọng ở đây
+            subword_counts = [len(tokenizer.tokenize(w, add_special_tokens=False)) for w in words]
+            
+            # Nhận dạng các framing tokens mặc định (BOS, EOS, SEP, CLS, PAD)
+            framing_ids = {
+                getattr(tokenizer, "cls_token_id", None),
+                getattr(tokenizer, "bos_token_id", None),
+                getattr(tokenizer, "eos_token_id", None),
+                getattr(tokenizer, "sep_token_id", None),
+                getattr(tokenizer, "pad_token_id", None)
+            }
+            # Remove None from set if tokenizer lacks some tokens
+            framing_ids.discard(None)
+            
+            wids = []
+            current_word_idx = 0
+            subword_counter = 0 # Đếm xem đã đi qua bao nhiêu mảnh của từ hiện tại
+            
+            for tid in input_ids:
+                # Bỏ qua mọi framing token ở đầu mảng (trước khi văn bản thực sự bắt đầu)
+                if tid in framing_ids and current_word_idx == 0 and all(x is None for x in wids):
+                    wids.append(None)
+                # Bỏ qua PAD token ở bất kỳ đâu
+                elif tid == getattr(tokenizer, "pad_token_id", -100):
+                    wids.append(None)
+                # Bỏ qua framing token ở cuối mảng (sau khi tất cả words đã được duyệt xong)
+                elif tid in framing_ids and current_word_idx >= len(subword_counts):
+                    wids.append(None)
+                else:
+                    # Map vào từ gốc hiện hành nếu chưa vượt quá số lượng
+                    if current_word_idx < len(subword_counts):
+                        wids.append(current_word_idx)
+                        subword_counter += 1
+                        
+                        # Nếu đi hết các subword của một từ gốc -> Sang từ tiếp theo
+                        if subword_counter >= subword_counts[current_word_idx]:
+                            current_word_idx += 1
+                            subword_counter = 0
+                    else:
+                        wids.append(None)
+            
+            all_word_ids.append(wids)
+
+        # Gắn kết quả vào tokenized_inputs
+        tokenized_inputs._custom_word_ids = all_word_ids
+
+        # Giả lập phương thức .word_ids()
+        def word_ids(batch_index=0):
+            return tokenized_inputs._custom_word_ids[batch_index]
+
+        tokenized_inputs.word_ids = word_ids
+        return tokenized_inputs
+
     def tokenize_inputs(self, texts, entities, blank=None, **kwargs):
         """Tokenize input texts with entity prompts.
 
@@ -296,8 +373,13 @@ class BaseProcessor(ABC):
             is_split_into_words=True,
             return_tensors="pt",
             truncation=True,
+            max_length=self.config.max_len,
             padding="longest",
         )
+        
+        if not self.support_word_ids:
+            tokenized_inputs = self.add_word_ids_to_tokenizer(tokenized_inputs, self.transformer_tokenizer, input_texts)
+
         words_masks = self.prepare_word_mask(texts, tokenized_inputs, prompt_lengths)
         tokenized_inputs["words_mask"] = torch.tensor(words_masks)
 
