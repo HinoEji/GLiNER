@@ -1615,7 +1615,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
         out, f1 = evaluator.evaluate()
 
         # In dự đoán của một vài sample ngẫu nhiên để người dùng theo dõi (chỉ in ở ngưỡng phổ biến để tránh lặp)
-        if len(dataset) > 0 and threshold == 0.5:
+        if len(dataset) > 0 :
             import random
             print(f"\n--- Previewing random predictions from evaluation dataset (Threshold: {threshold}) ---")
             num_samples = min(3, len(dataset))
@@ -1639,8 +1639,9 @@ class BaseEncoderGLiNER(BaseGLiNER):
                 preds_list = []
                 if i < len(all_preds):
                     for p in all_preds[i]:
-                        s, e = getattr(p, "start", p[0]), getattr(p, "end", p[1])
-                        lbl = getattr(p, "entity_type", p[2] if len(p)>2 else "UNK")
+                        s = p.start if hasattr(p, "start") else p[0]
+                        e = p.end if hasattr(p, "end") else p[1]
+                        lbl = p.entity_type if hasattr(p, "entity_type") else (p.label if hasattr(p, "label") else (p[2] if isinstance(p, (tuple, list)) and len(p)>2 else "UNK"))
                         w = text[s:e+1] if isinstance(text, list) else []
                         w_str = ' '.join(w) if w else "..."
                         preds_list.append(f"{lbl} [{w_str}]")

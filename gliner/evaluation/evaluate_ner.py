@@ -75,23 +75,24 @@ def process(data):
     for entity in data["entities"]:
         start_char, end_char = entity["pos"]
 
-        # Initialize variables to keep track of word positions
-        start_word = None
-        end_word = None
+        # # Initialize variables to keep track of word positions
+        # start_word = None
+        # end_word = None
 
-        # Iterate through words and find the word positions
-        char_count = 0
-        for i, word in enumerate(words):
-            word_length = len(word)
-            if char_count == start_char:
-                start_word = i
-            if char_count + word_length == end_char:
-                end_word = i
-                break
-            char_count += word_length + 1  # Add 1 for the space
+        # # Iterate through words and find the word positions
+        # char_count = 0
+        # for i, word in enumerate(words):
+        #     word_length = len(word)
+        #     if char_count == start_char:
+        #         start_word = i
+        #     if char_count + word_length == end_char:
+        #         end_word = i
+        #         break
+        #     char_count += word_length + 1  # Add 1 for the space
 
-        # Append the word positions to the list
-        entities.append((start_word, end_word, entity["type"].lower()))
+        # # Append the word positions to the list
+        # entities.append((start_word, end_word, entity["type"].lower()))
+        entities.append((start_char, end_char, entity["type"].lower()))
 
     # Create a list of word positions for each entity
     sample = {"tokenized_text": words, "ner": entities}
@@ -124,12 +125,21 @@ def create_dataset(path):
     train_dataset = []
     dev_dataset = []
     test_dataset = []
-    for data in train:
-        train_dataset.append(process(data))
-    for data in dev:
-        dev_dataset.append(process(data))
-    for data in test:
-        test_dataset.append(process(data))
+    try:
+        for data in train:
+            train_dataset.append(process(data))
+    except:
+        train_dataset = None
+    try:
+        for data in dev:
+            dev_dataset.append(process(data))
+    except:
+        dev_dataset = None
+    try:
+        for data in test:
+            test_dataset.append(process(data))
+    except:
+        test_dataset = None
     labels = [label.lower() for label in labels]
     return train_dataset, dev_dataset, test_dataset, labels
 
@@ -159,6 +169,7 @@ def get_for_one_path(path, model):
     """
     # load the dataset
     _, _, test_dataset, entity_types = create_dataset(path)
+    print(f"Num sample: {len(test_dataset)}" )
 
     data_name = path.split("/")[-1]  # get the name of the dataset
 
@@ -219,7 +230,7 @@ def get_for_all_path(model, steps, log_dir, data_paths):
 
     zero_shot_benc = [
         "mit-movie",
-        "mit-restaurant",
+        "mit_restaurant",
         "CrossNER_AI",
         "CrossNER_literature",
         "CrossNER_music",
@@ -309,7 +320,7 @@ def sample_train_data(data_paths, sample_size=10000):
         "CrossNER_music",
         "CrossNER_politics",
         "CrossNER_science",
-        "ACE 2004",
+        "ACE 2004"
     ]
 
     new_train = []
