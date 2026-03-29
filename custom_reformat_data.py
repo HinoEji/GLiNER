@@ -1,4 +1,16 @@
 from seqeval.metrics.sequence_labeling import get_entities
+ent_map = {
+    "PRODUCT" : "sản phẩm",
+    "PRODUCT FEATURE" : "đặc trưng sản phẩm",
+    "PRODUCT USAGE" : "công dụng sản phẩm",
+    "PRODUCT QUALITY" : "chất lượng sản phẩm",
+    "PRODUCT DESIGN" : "thiết kế sản phẩm",
+    "PRICE" : "giá cả",
+    "SERVICE" : "dịch vụ",
+    "BRANDING" : "thương hiệu",
+    "GENERAL" : "chung",
+    "DELIVERY" : "giao hàng"
+}
 
 def read_conll_file(file_path, ent_path = None):
     data = []
@@ -10,6 +22,7 @@ def read_conll_file(file_path, ent_path = None):
         try:
             with open(ent_path, "r", encoding="utf-8") as f:
                 list_ent = [line.strip() for line in f if line.strip()]
+                list_ent = [ent_map[ent] for ent in list_ent]
         except:
             list_ent = None
     else:
@@ -49,6 +62,7 @@ def convert_to_span(tokens, tags, list_ent = None):
     ner = []
     ner_labels = []
     for ent_type, start, end in entities:
+        ent_type = ent_map[ent_type]
         ner.append([start,end, ent_type])
         ner_labels.append(ent_type)
     if list_ent:
@@ -101,6 +115,11 @@ def process_folder(folder_path):
         print(f"Saved: {json_name}")
         print(f"Num Samples : {len(data)}")
         print("---"*15)
+        with open(label_path, "r", encoding="utf-8") as f:
+            list_ent = [line.strip() for line in f if line.strip()]
+            list_ent = [ent_map[ent] for ent in list_ent]
+        with open(label_path.replace(".txt", "s.json"), "w", encoding="utf-8") as f:
+            json.dump(list_ent, f, ensure_ascii=False, indent=4)
 
 if __name__ == "__main__":
     process_folder("/kaggle/working/GLiNER/custom_train_data/v3.1")

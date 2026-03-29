@@ -94,7 +94,7 @@ def main(cfg_path: str):
         save_strategy=getattr(cfg.training, "save_strategy", "epoch"),
         save_total_limit=getattr(cfg.training, "save_total_limit", 2),
         logging_strategy="steps",
-        logging_steps=100,
+        logging_steps=10,
         eval_strategy=getattr(cfg.training, "eval_strategy", "epoch"),
         
         # Bật lại tính năng lưu model xịn nhất đồng bộ trực tiếp từ file YAML Config
