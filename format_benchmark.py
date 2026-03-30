@@ -98,7 +98,7 @@ def process_folder(folder_path):
         print("---"*15)
 
 if __name__ == "__main__":
-    path = "/kaggle/working/GLiNER/my_benchmark/"
+    path = "/kaggle/working/GLiNER/valid_data/"
 
     subfolders = [
         f for f in os.listdir(path)

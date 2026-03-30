@@ -112,8 +112,8 @@ class Trainer(transformers.Trainer):
             import sys
             import re
             
-            # Quét thử từ ngưỡng 0.3 đến 0.8 (bước nhảy 0.1)
-            thresholds = [round(t, 1) for t in np.arange(0.3, 0.8, 0.1)]
+            # Quét thử từ ngưỡng 0.3 đến 0.9 (bước nhảy 0.1)
+            thresholds = [round(t, 1) for t in np.arange(0.3, 0.9, 0.1)]
             
             if isinstance(dataset_to_eval, dict):
                 for key, dataset in dataset_to_eval.items():
