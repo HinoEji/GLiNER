@@ -543,7 +543,7 @@ class SpanDecoder(BaseSpanDecoder):
         Returns:
             Span: Span object with entity properties.
         """
-        ent_type = id_to_class[class_idx + 1]  # +1 because 0 is <pad>
+        ent_type = id_to_class.get(class_idx + 1, f"UNKNOWN_{class_idx}")  # +1 because 0 is <pad>
         return Span(
             start=start,
             end=start + width,
@@ -670,7 +670,7 @@ class SpanGenerativeDecoder(BaseSpanDecoder):
         Returns:
             Span: Span object with entity properties and optional generated labels.
         """
-        ent_type = id_to_class[class_idx + 1]  # +1 because 0 is <pad>
+        ent_type = id_to_class.get(class_idx + 1, f"UNKNOWN_{class_idx}")  # +1 because 0 is <pad>
         gen_ent_type = span_label_map.get(flat_idx)
         return Span(
             start=start,

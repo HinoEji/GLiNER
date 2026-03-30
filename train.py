@@ -52,7 +52,7 @@ def main(cfg_path: str):
     
     # ======= PHẦN MỚI CHÈN VÀO ĐỂ LOAD CÁC LOẠI ENTITY TRƯỚC KHI TRAIN ========
     # Bạn có thể trỏ cố định đến file danh sách entity mong muốn của bạn!
-    labels_path = "valid_data/labels.json" # Ví dụ file labels.json
+    labels_path = "custom_train_data/v3.3.1/labels.json" # Ví dụ file labels.json
     try:
         model.eval_entity_types = load_json_data(labels_path)
         print(f"Loaded {len(model.eval_entity_types)} entity types for customized evaluation.")
@@ -68,6 +68,7 @@ def main(cfg_path: str):
     # Train
     print("\nStarting training...")
     model.train_model(
+        save_only_model=True,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         output_dir="models",
@@ -116,6 +117,6 @@ def main(cfg_path: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train GLiNER model")
-    parser.add_argument("--config", type=str, default="configs/config.yaml", help="Path to config file (YAML or JSON)")
+    parser.add_argument("--config", type=str, default="/kaggle/working/GLiNER/cafebert_config.yaml", help="Path to config file (YAML or JSON)")
     args = parser.parse_args()
     main(args.config)
