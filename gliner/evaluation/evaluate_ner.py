@@ -145,7 +145,7 @@ def create_dataset(path):
 
 
 @torch.no_grad()
-def get_for_one_path(path, model, threshold = 0.5):
+def get_for_one_path(path, model, threshold = 0.5, return_preds=False):
     """Evaluate a model on a single dataset.
 
     Loads the test set from the specified path and evaluates the model's
@@ -179,10 +179,16 @@ def get_for_one_path(path, model, threshold = 0.5):
         flat_ner = False
 
     # evaluate the model
-    results, f1 = model.evaluate(
-        test_dataset, flat_ner=flat_ner, threshold=threshold, batch_size=256, entity_types=entity_types
-    )
-    return data_name, results, f1
+    if return_preds:
+        results, f1, preds = model.evaluate(
+            test_dataset, flat_ner=flat_ner, threshold=threshold, batch_size=256, entity_types=entity_types, return_preds=True
+        )
+        return data_name, results, f1, preds
+    else:
+        results, f1 = model.evaluate(
+            test_dataset, flat_ner=flat_ner, threshold=threshold, batch_size=256, entity_types=entity_types
+        )
+        return data_name, results, f1
 
 
 def get_for_all_path(model, steps, log_dir, data_paths):

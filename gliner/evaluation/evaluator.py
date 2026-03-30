@@ -5,6 +5,32 @@ import torch
 
 from .utils import _prf_divide, flatten_for_eval, extract_tp_actual_correct
 
+def compute_per_type_metrics(entities_true, entities_pred):
+    results = {}
+
+    all_types = set(entities_true.keys()) | set(entities_pred.keys())
+
+    for t in all_types:
+        true_set = entities_true.get(t, set())
+        pred_set = entities_pred.get(t, set())
+
+        tp = len(true_set & pred_set)
+        fp = len(pred_set - true_set)
+        fn = len(true_set - pred_set)
+
+        precision = tp / (tp + fp + 1e-8)
+        recall = tp / (tp + fn + 1e-8)
+        f1 = 2 * precision * recall / (precision + recall + 1e-8)
+
+        results[t] = {
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+            "support": len(true_set)
+        }
+
+    return results
+
 
 class BaseEvaluator(ABC):
     """Abstract base class for evaluation of NER and relation extraction tasks.
@@ -124,6 +150,7 @@ class BaseEvaluator(ABC):
             for efficiency during evaluation.
         """
         all_true_typed, all_outs_typed = self.transform_data()
+        
         precision, recall, f1 = self.compute_prf(all_true_typed, all_outs_typed).values()
         output_str = f"P: {precision:.2%}\tR: {recall:.2%}\tF1: {f1:.2%}\n"
         return output_str, f1

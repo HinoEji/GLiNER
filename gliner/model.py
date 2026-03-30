@@ -1573,6 +1573,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
         threshold: float = 0.5,
         batch_size: int = 12,
         entity_types: Optional[List[str]] = None,
+        return_preds: bool = False,
     ) -> Tuple[Any, float]:
         """Evaluate the model on a given test dataset.
 
@@ -1651,6 +1652,8 @@ class BaseEncoderGLiNER(BaseGLiNER):
                 print(f"  --> Pred: {', '.join(preds_list)}")
             print("-" * 60 + "\n")
 
+        if return_preds:
+            return out, f1, all_preds
         return out, f1
 
 
