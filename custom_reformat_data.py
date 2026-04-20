@@ -122,4 +122,4 @@ def process_folder(folder_path):
             json.dump(list_ent, f, ensure_ascii=False, indent=4)
 
 if __name__ == "__main__":
-    process_folder("/kaggle/working/GLiNER/custom_train_data/v3.1")
+    process_folder("/kaggle/working/GLiNER/custom_train_data/v3.4")

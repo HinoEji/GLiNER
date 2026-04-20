@@ -98,10 +98,10 @@ def split_data(entries: List[Dict[str, Any]],
 
 
 if __name__ == "__main__":
-    data_path = "/kaggle/working/GLiNER/custom_train_data/v3.3.1/data_v3.3.1.csv"
-    train_path = "/kaggle/working/GLiNER/custom_train_data/v3.3.1/train.txt"
-    test_path = "/kaggle/working/GLiNER/custom_train_data/v3.3.1/test.txt"
-    dev_path = "/kaggle/working/GLiNER/custom_train_data/v3.3.1/dev.txt"
+    data_path = "/kaggle/working/GLiNER/custom_train_data/v3.4/data_v3.4.csv"
+    train_path = "/kaggle/working/GLiNER/custom_train_data/v3.4/train.txt"
+    test_path = "/kaggle/working/GLiNER/custom_train_data/v3.4/test.txt"
+    dev_path = "/kaggle/working/GLiNER/custom_train_data/v3.4/dev.txt"
     
     data = process_csv(data_path)
     with open(data_path.replace(".csv", ".json"), "w", encoding="utf-8") as f:

@@ -1,0 +1,1 @@
+python train.py --config cafebert_config.yaml

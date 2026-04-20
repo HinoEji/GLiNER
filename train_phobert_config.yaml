@@ -23,8 +23,8 @@ model:
 data:
   # Directory Paths
   root_dir: /kaggle/working/GLiNER
-  train_data: "custom_train_data/v3.3.1/train.json"
-  val_data_dir: "custom_train_data/v3.3.1/dev.json"  # Set to validation data path or "none"
+  train_data: "custom_train_data/v3.4/train.json"
+  val_data_dir: "custom_train_data/v3.4/dev.json"  # Set to validation data path or "none"
 
 training:
   report_to: tensorboard
