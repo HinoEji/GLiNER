@@ -170,7 +170,7 @@ def create_parser():
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--threshold", type=float, default =0.5)
     parser.add_argument("--log_dir", type=str, default="logs", help="Path to model folder")
-    parser.add_argument('--data', type=str, default='/kaggle/working/GLiNER/valid_data', help='Path to the eval datasets directory')
+    parser.add_argument('--data', type=str, default='valid_data', help='Path to the eval datasets directory')
     return parser
 
 
