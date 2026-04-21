@@ -14,6 +14,7 @@ data.json
 #logs
 logs/
 models/
+output/
 
 # Distribution / packaging
 .Python

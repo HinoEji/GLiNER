@@ -22,7 +22,7 @@ def build_model(model_cfg: dict, train_cfg: dict):
     return GLiNER.from_config(model_cfg)
 
 
-def main(cfg_path: str):
+def main(cfg_path: str,output_path:str):
     """Main training function."""
     # Load config
     cfg = load_config_as_namespace(cfg_path)
@@ -71,7 +71,7 @@ def main(cfg_path: str):
         save_only_model=True,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
-        output_dir="models",
+        output_dir=output_path,
         # Schedule
         # max_steps=-1,
         lr_scheduler_type=cfg.training.scheduler_type,
@@ -118,5 +118,11 @@ def main(cfg_path: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train GLiNER model")
     parser.add_argument("--config", type=str, default="/kaggle/working/GLiNER/cafebert_config.yaml", help="Path to config file (YAML or JSON)")
+    parser.add_argument(
+    "--path",
+    type=str,
+    default="/kaggle/working/data",
+    help="Path to the output"
+)
     args = parser.parse_args()
-    main(args.config)
+    main(args.config, args.path)
