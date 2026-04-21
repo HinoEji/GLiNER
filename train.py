@@ -117,7 +117,7 @@ def main(cfg_path: str,output_path:str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train GLiNER model")
-    parser.add_argument("--config", type=str, default="/kaggle/working/GLiNER/cafebert_config.yaml", help="Path to config file (YAML or JSON)")
+    parser.add_argument("--config", type=str, default="cafebert_config.yaml", help="Path to config file (YAML or JSON)")
     parser.add_argument(
     "--path",
     type=str,
