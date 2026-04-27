@@ -22,7 +22,7 @@ model:
   
 data:
   # Directory Paths
-  root_dir: /kaggle/working/GLiNER
+  root_dir: .
   train_data: "custom_train_data/v3.4/train.json"
   val_data_dir: "custom_train_data/v3.4/dev.json"  # Set to validation data path or "none"
 

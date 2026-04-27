@@ -5,3 +5,4 @@ onnxruntime-gpu; sys_platform != 'darwin'
 sentencepiece
 tqdm
 seqeval
+tensorboard

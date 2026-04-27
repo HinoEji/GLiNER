@@ -4,6 +4,7 @@ from gliner import GLiNER
 from gliner.evaluation import get_for_one_path,get_for_all_path
 import os
 import json
+import torch
 from seqeval.metrics.sequence_labeling import get_entities
 
 import numpy as np
@@ -188,7 +189,9 @@ if __name__ == "__main__":
 
     best_model_checkpoint = get_best_model_checkpoint(args.model)
 
-    model = GLiNER.from_pretrained(best_model_checkpoint, load_tokenizer=True).to("cuda:0")
+    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
+    model = GLiNER.from_pretrained(best_model_checkpoint, load_tokenizer=True).to(device)
     all_results = {}
     total_f1 = 0
     for folder in subfolders:

@@ -121,7 +121,7 @@ if __name__ == "__main__":
     parser.add_argument(
     "--path",
     type=str,
-    default="/kaggle/working/data",
+    default="./data",
     help="Path to the output"
 )
     args = parser.parse_args()
