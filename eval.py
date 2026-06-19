@@ -186,8 +186,10 @@ if __name__ == "__main__":
     print(f"Found {len(subfolders)} dataset.")
     for folder in subfolders:
         print("---", folder)
-
-    best_model_checkpoint = get_best_model_checkpoint(args.model)
+    try:
+        best_model_checkpoint = get_best_model_checkpoint(args.model)
+    except:
+        best_model_checkpoint = args.model
 
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
 

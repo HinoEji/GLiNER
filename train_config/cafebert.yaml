@@ -1,6 +1,6 @@
 model:
   # Model Configuration
-  model_name: uitnlp/CafeBERT # Hugging Face model
+  model_name: /kaggle/input/models/hinoeiji/cafebert/pytorch/default/1 # Hugging Face model
   labels_encoder: null  # Set to model name for bi-encoder architecture
   labels_decoder: null  # Set to model name for decoder-based architecture
   name: "span level gliner"

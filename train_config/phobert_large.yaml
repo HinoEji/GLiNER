@@ -1,6 +1,6 @@
 model:
   # Model Configuration
-  model_name: vinai/phobert-large # Hugging Face model
+  model_name: /kaggle/input/models/hinoeiji/phobert-large/pytorch/default/1 # Hugging Face model
   labels_encoder: null  # Set to model name for bi-encoder architecture
   labels_decoder: null  # Set to model name for decoder-based architecture
   name: "span level gliner"
