@@ -5,6 +5,7 @@ from pathlib import Path
 from gliner import GLiNER
 from gliner.utils import load_config_as_namespace, namespace_to_dict
 
+LABEL_PATH="custom_train_data/v3.4_truncate/labels.json"
 
 def load_json_data(path: str):
     """Load JSON dataset."""
@@ -52,7 +53,7 @@ def main(cfg_path: str,output_path:str):
     
     # ======= PHẦN MỚI CHÈN VÀO ĐỂ LOAD CÁC LOẠI ENTITY TRƯỚC KHI TRAIN ========
     # Bạn có thể trỏ cố định đến file danh sách entity mong muốn của bạn!
-    labels_path = "custom_train_data/v3.3.1/labels.json" # Ví dụ file labels.json
+    labels_path = LABEL_PATH # Ví dụ file labels.json
     try:
         model.eval_entity_types = load_json_data(labels_path)
         print(f"Loaded {len(model.eval_entity_types)} entity types for customized evaluation.")
