@@ -1,4 +1,16 @@
 from seqeval.metrics.sequence_labeling import get_entities
+ent_map = {
+    "PRODUCT" : "sản phẩm",
+    "PRODUCT FEATURE" : "đặc trưng sản phẩm",
+    "PRODUCT USAGE" : "công dụng sản phẩm",
+    "PRODUCT QUALITY" : "chất lượng sản phẩm",
+    "PRODUCT DESIGN" : "thiết kế sản phẩm",
+    "PRICE" : "giá cả",
+    "SERVICE" : "dịch vụ",
+    "BRANDING" : "thương hiệu",
+    "GENERAL" : "chung",
+    "DELIVERY" : "giao hàng"
+}
 
 def read_conll_file(file_path, ent_path):
     data = []
@@ -27,10 +39,12 @@ def read_conll_file(file_path, ent_path):
                 continue
             
             parts = line.split("\t")
-            if len(parts) != 2:
+            if len(parts) < 2:
                 continue
             
-            token, tag = parts
+            # token, tag = parts
+            token = parts[0]
+            tag = " ".join(parts[1:])
             tokens.append(token)
             tags.append(tag)
     
@@ -48,7 +62,8 @@ def convert_to_span(tokens, tags):
         ner.append(
             {
                 "pos" : (start, end),
-                "type": ent_type.lower()
+                # "type": ent_type.lower()
+                "type": ent_map.get(ent_type, ent_type).lower()
             }
         )
     
