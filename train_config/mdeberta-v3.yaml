@@ -33,7 +33,7 @@ training:
   
   # Training Parameters
   num_train_epochs: 10
-  train_batch_size: 2
+  train_batch_size: 8
   eval_every: 200
   warmup_ratio: 0.05
   scheduler_type: "cosine"  # Options: linear, cosine, constant

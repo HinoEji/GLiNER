@@ -246,7 +246,7 @@ if __name__ == "__main__":
     # PHẦN CUỐI FILE: thêm metrics classification vào all_results
     # =========================================================
 
-    gt = read_conll_file("custom_train_data/v3.4_truncate/test.txt")
+    gt = read_conll_file("custom_train_data/official/test.txt")
 
     with open(full_file_path, "r", encoding="utf-8") as f:
         prediction = json.load(f)
